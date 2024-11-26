@@ -1,0 +1,80 @@
+---
+name: Snapshot Test
+
+"on":
+  push:
+    branches:
+      - main
+
+jobs:
+  setup-go-and-snapshot:
+    name: Setup Go and Create Snapshot
+    runs-on: warp-ubuntu-2204-x64-2x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download go.sum
+        run: |
+          set -x
+          wget --no-verbose https://raw.githubusercontent.com/packwiz/packwiz/refs/heads/main/go.sum
+          echo $PATH
+
+      - name: Setup Go
+        uses: WarpBuilds/setup-go@v5
+        with:
+          go-version: "1.23.3"
+
+      - name: Install and verify
+        run: |
+          set -x
+          go install github.com/packwiz/packwiz@latest
+          echo $PATH
+          packwiz
+
+      - name: Create snapshot
+        uses: WarpBuilds/snapshot-save@v1
+        with:
+          alias: "go-setup-${{ github.run_id }}"
+          fail-on-error: true
+          wait-timeout-minutes: 60
+
+  run-from-snapshot:
+    name: Verify Snapshot
+    runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=go-setup-${{ github.run_id }}
+    needs: setup-go-and-snapshot
+    steps:
+      - name: Verify
+        run: |
+          set -x
+          echo $PATH
+          packwiz
+
+  run-from-snapshot-go:
+    name: Verify Snapshot with Go Setup
+    runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=go-setup-${{ github.run_id }}
+    needs: setup-go-and-snapshot
+    steps:
+      - name: Setup Go
+        uses: WarpBuilds/setup-go@v5
+        with:
+          go-version: "1.23.3"
+
+      - name: Verify
+        run: |
+          set -x
+          echo $PATH
+          packwiz
+
+  run-from-snapshot-path:
+    name: Verify Snapshot with PATH
+    runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=go-setup-${{ github.run_id }}
+    needs: setup-go-and-snapshot
+    steps:
+      - name: Set PATH and verify
+        run:
+          set -x
+          echo $PATH
+          export PATH="/home/runner/go/bin:/opt/hostedtoolcache/go/1.23.3/x64/bin:${PATH}"
+          echo $PATH
+          packwiz
