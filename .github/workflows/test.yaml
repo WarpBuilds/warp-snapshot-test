@@ -31,6 +31,9 @@ jobs:
           go install github.com/packwiz/packwiz@latest
           echo $PATH
           packwiz
+      - name: Print all envs
+        run: |
+          printenv | sort
 
       - name: Create snapshot
         uses: WarpBuilds/snapshot-save@v1
