@@ -1,0 +1,82 @@
+---
+name: Java Test
+
+"on":
+  push:
+    branches:
+      - main
+
+jobs:
+  snapshot:
+    name: Snapshot
+    runs-on: warp-ubuntu-2204-x64-2x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print PATH
+        run: |
+          echo $PATH
+
+      - name: Setup Java
+        uses: WarpBuilds/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Verify
+        run: |
+          set -x
+          java -version
+          echo $PATH
+
+      - name: Create snapshot
+        uses: WarpBuilds/snapshot-save@v1
+        with:
+          alias: "java-setup-${{ github.run_id }}"
+          fail-on-error: true
+          wait-timeout-minutes: 60
+
+  run-from-snapshot:
+    name: Verify
+    runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=java-setup-${{ github.run_id }}
+    needs: snapshot
+    steps:
+      - name: Verify
+        run: |
+          set -x
+          java -version
+          echo $PATH
+          java -version 2>&1 | grep -q "Temurin-21" || exit 1
+
+  run-from-snapshot-setup:
+    name: Verify with Setup
+    runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=java-setup-${{ github.run_id }}
+    needs: snapshot
+    steps:
+      - name: Setup Java
+        uses: WarpBuilds/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Verify
+        run: |
+          set -x
+          java -version
+          echo $PATH
+          java -version 2>&1 | grep -q "Temurin-21" || exit 1
+
+  run-from-snapshot-path:
+    name: Verify Snapshot with PATH
+    runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=java-setup-${{ github.run_id }}
+    needs: snapshot
+    steps:
+      - name: Set PATH and verify
+        run: |
+          set -x
+          echo $PATH
+          export PATH="$(ls -d /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.*/x64/bin 2>/dev/null | sort -V | tail -n 1):${PATH}"
+          java -version
+          echo $PATH
+          java -version 2>&1 | grep -q "Temurin-21" || exit 1
