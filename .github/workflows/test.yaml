@@ -50,6 +50,9 @@ jobs:
     runs-on: warp-ubuntu-2204-x64-2x;snapshot.key=go-setup-${{ github.run_id }}
     needs: setup-go-and-snapshot
     steps:
+      - name: Print all envs present
+        run: |
+          printenv | sort
       - name: Verify
         run: |
           set -x
