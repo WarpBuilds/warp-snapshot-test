@@ -34,7 +34,9 @@ jobs:
       - name: Print all envs
         run: |
           printenv | sort
-
+      - name: All envs without GITHUB_ and WARP_
+        run: |
+          printenv | grep -v '^GITHUB_' | grep -v '^WARP_' | sort
       - name: Create snapshot
         uses: WarpBuilds/snapshot-save@v1
         with:
