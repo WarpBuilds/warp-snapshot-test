@@ -37,7 +37,11 @@ jobs:
       - name: All envs without GITHUB_ and WARP_ to bashrc
         run: |
           printenv | grep -v '^GITHUB_' | grep -v '^WARP_' | grep -v '^WARPBUILD_' | grep -v '^RUNNER_' | sort | sed 's/^/export /' >> ~/.bashrc
+          echo 'export TEST_ENV=true' >> ~/.bashrc
           cat ~/.bashrc
+      - name: Validate new env
+        run: |
+          printenv | sort
       - name: Create snapshot
         uses: WarpBuilds/snapshot-save@v1
         with:
