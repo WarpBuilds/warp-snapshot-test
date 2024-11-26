@@ -39,9 +39,9 @@ jobs:
           printenv | grep -v '^GITHUB_' | grep -v '^WARP_' | sort | while IFS= read -r line; do
             key=$(echo "$line" | cut -d= -f1)
             value=$(echo "$line" | cut -d= -f2-)
-            printf '%s=%q\n' "$key" "$value" >> /etc/environment
+            printf '%s=%q\n' "$key" "$value" | sudo tee -a /etc/environment > /dev/null
           done
-          echo 'TEST_ENV=true' >> /etc/environment
+          echo 'TEST_ENV=true' | sudo tee -a /etc/environment > /dev/null
       - name: Validate new env
         run: |
           printenv | sort
